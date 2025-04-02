@@ -948,4 +948,241 @@ body {
 
 .thinking-content::-webkit-scrollbar-thumb:hover {
     background-color: rgba(46, 204, 113, 0.4);
-} 
+}
+
+/* Toggle-Button für mobile Sidebar */
+.toggle-sidebar {
+    display: none;  /* Standardmäßig ausgeblendet */
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* === RESPONSIVE DESIGN === */
+/* Große Tablets (landscape) und kleinere Desktops */
+@media screen and (max-width: 1200px) {
+    :root {
+        --sidebar-width: 240px;
+    }
+    
+    .chat-container {
+        max-width: 85%;
+    }
+    
+    .message {
+        padding: 12px;
+    }
+}
+
+/* Tablets und kleinere Tablets (portrait) */
+@media screen and (max-width: 992px) {
+    :root {
+        --sidebar-width: 220px;
+    }
+    
+    .chat-container {
+        max-width: 95%;
+    }
+    
+    .model-selector-main .model-label {
+        padding: 8px 10px;
+        min-width: 70px;
+        font-size: 0.9rem;
+    }
+    
+    .message {
+        max-width: 95%;
+    }
+    
+    .message-content {
+        font-size: 0.95rem;
+    }
+    
+    .input-area-wrapper {
+        padding: 10px 15px;
+    }
+    
+    .input-area {
+        padding: 8px 10px;
+    }
+    
+    #user-input {
+        font-size: 0.95rem;
+    }
+}
+
+/* Kleinere Tablets und große Smartphones */
+@media screen and (max-width: 768px) {
+    .main-wrapper {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 50px;
+        overflow: hidden;
+        flex-direction: row;
+        align-items: center;
+        padding: 10px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color-subtle);
+        position: relative;
+        transition: max-height 0.3s ease;
+    }
+    
+    .sidebar.expanded {
+        max-height: 100vh;
+        z-index: 100;
+        overflow-y: auto;
+    }
+    
+    .new-chat-button {
+        margin-bottom: 0;
+        margin-right: 10px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+        width: auto;
+    }
+    
+    .memories-button {
+        width: auto;
+        height: auto;
+        padding: 6px 10px;
+        margin-bottom: 0;
+        font-size: 0.85rem;
+    }
+    
+    .chat-history {
+        display: none;
+        width: 100%;
+    }
+    
+    .sidebar.expanded .chat-history {
+        display: block;
+        margin-top: 10px;
+    }
+    
+    .toggle-sidebar {
+        display: block;  /* Nur auf mobilen Geräten anzeigen */
+        margin-left: auto;
+    }
+    
+    .main-content {
+        height: calc(100vh - 50px);
+    }
+    
+    .chat-container {
+        max-width: 100%;
+        padding: 10px;
+    }
+    
+    .message {
+        max-width: 100%;
+    }
+    
+    .model-selector-main {
+        padding: 10px;
+    }
+    
+    .model-selector-main .model-options {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .input-area-wrapper {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 10px;
+        background-color: var(--bg-primary);
+        border-top: 1px solid var(--border-color-subtle);
+    }
+    
+    .chat-box {
+        height: calc(100vh - 140px);
+        padding-bottom: 60px;
+    }
+}
+
+/* Smartphones */
+@media screen and (max-width: 576px) {
+    .model-selector-main .model-options {
+        gap: 5px;
+    }
+    
+    .model-selector-main .model-label {
+        padding: 6px 8px;
+        min-width: 60px;
+        font-size: 0.85rem;
+    }
+    
+    .message {
+        padding: 10px;
+    }
+    
+    .message-content {
+        font-size: 0.9rem;
+    }
+    
+    .input-area {
+        padding: 6px 8px;
+    }
+    
+    #user-input {
+        font-size: 0.9rem;
+        padding: 6px 8px;
+    }
+    
+    .input-button {
+        width: 34px;
+        height: 34px;
+    }
+    
+    .input-button svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .message-actions-container {
+        flex-direction: column;
+        top: 5px;
+        right: 5px;
+    }
+    
+    .action-button {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 5px;
+    }
+    
+    .action-button svg {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .chat-box {
+        height: calc(100vh - 130px);
+    }
+    
+    .thinking-container {
+        margin: 5px 0;
+    }
+    
+    .thinking-header {
+        padding: 8px;
+    }
+    
+    .thinking-content {
+        padding: 8px;
+        max-height: 150px;
+    }
+}
+
+/* JavaScript-Klasse für die Toggle-Funktionalität */
+/* Muss in script.js implementiert werden */ 

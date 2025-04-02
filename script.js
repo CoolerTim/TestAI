@@ -1633,6 +1633,14 @@ async function sendMessage(retryCount = 0) {
                 private: true,
         };
         
+        // Spezielle Anweisung für das Reasoning-Modell, um chinesische Schriftzeichen zu vermeiden
+        if (currentModel === MODEL_OPTIONS.REASONING) {
+            apiParams.messages.push({
+                role: "system",
+                content: "WICHTIGE ANWEISUNG FÜR DAS KI-MODELL: Du darfst in deinen Antworten und Gedanken AUSSCHLIESSLICH das lateinische Alphabet und entsprechende westliche Schriftzeichen verwenden. Benutze unter KEINEN Umständen chinesische, japanische, koreanische oder andere nicht-lateinische Schriftzeichen in deinen Gedanken (<think>-Tags) oder Antworten. Alle deine Ausgaben müssen ausschließlich in der Sprache des Nutzers (z.B. Deutsch, Englisch, Französisch) erfolgen, ohne jegliche Verwendung von asiatischen Schriftzeichen. Dies ist eine ABSOLUTE ANFORDERUNG.\n\nBESCHRÄNKUNG DER GEDANKENLÄNGE: Beschränke deine Gedanken innerhalb der <think>-Tags auf MAXIMAL 7500 Zeichen. Die API schneidet längere Antworten ab, was zu unvollständigen Antworten führt. Sei präzise und klar in deinen Gedanken, aber halte sie unter diesem Limit von 7500 Zeichen. Wenn du merkst, dass deine Gedanken zu lang werden, fasse sie zusammen und konzentriere dich auf die wichtigsten Aspekte."
+            });
+        }
+        
         // Aktuelle Datum und Uhrzeit hinzufügen
         const currentDateTime = getCurrentDateTimeInfo();
         apiParams.messages.push({
@@ -2361,14 +2369,112 @@ function displayChatMessages(history) {
             // Handle different content formats
             if (typeof message.content === 'string') {
                 rawText = message.content;
-                // Convert markdown to HTML
+                
+                // Prüfe auf <think>-Tags in der Nachricht (Reasoning-Modell)
+                if (rawText.includes('<think>') && rawText.includes('</think>')) {
+                    // Extrahiere Thinking-Content und Hauptinhalt
+                    const thinkingMatch = rawText.match(/<think>([\s\S]*?)<\/think>/);
+                    if (thinkingMatch) {
+                        const thinkingContent = thinkingMatch[1].trim();
+                        
+                        // Extrahiere den Hauptinhalt (alles nach dem letzten </think> Tag)
+                        const parts = rawText.split('</think>');
+                        const mainContent = parts[parts.length - 1].trim();
+                        
+                        // Erstelle eine KI-Nachricht und füge dann direkt die Thinking-Box hinzu
+                        const messageId = `ai-msg-${Date.now()}`;
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('message-container', 'ai-message-container');
+                        
+                        const aiMessage = document.createElement('div');
+                        aiMessage.classList.add('message', 'ai-message');
+                        aiMessage.id = messageId;
+                        
+                        const messageContent = document.createElement('div');
+                        messageContent.classList.add('message-content');
+                        
+                        aiMessage.appendChild(messageContent);
+                        messageElement.appendChild(aiMessage);
+                        chatBox.appendChild(messageElement);
+                        
+                        // Direkt den Thinking-Content hinzufügen ohne Loading-Nachricht
+                        updateStreamingMessage(messageId, rawText);
+                        
+                        // Nach dem Hinzufügen des Inhalts die Box standardmäßig einklappen
+                        setTimeout(() => {
+                            const thinkingContainer = messageElement.querySelector('.thinking-container');
+                            if (thinkingContainer) {
+                                const thinkingHeader = thinkingContainer.querySelector('.thinking-header');
+                                const thinkingContent = thinkingContainer.querySelector('.thinking-content');
+                                const toggleButton = thinkingHeader.querySelector('.thinking-toggle');
+                                
+                                // Box einklappen
+                                thinkingContent.style.display = 'none';
+                                toggleButton.textContent = '▶';
+                            }
+                        }, 50);
+                        
+                        continue; // Überspringen der normalen Nachrichtenverarbeitung
+                    }
+                }
+                
+                // Convert markdown to HTML (für normale Nachrichten ohne Thinking)
                 content = markdownConverter.makeHtml(rawText);
             } else if (message.content && typeof message.content.text === 'string') {
                 rawText = message.content.text;
+                
+                // Auch hier auf <think>-Tags prüfen
+                if (rawText.includes('<think>') && rawText.includes('</think>')) {
+                    // Extrahiere Thinking-Content und Hauptinhalt
+                    const thinkingMatch = rawText.match(/<think>([\s\S]*?)<\/think>/);
+                    if (thinkingMatch) {
+                        const thinkingContent = thinkingMatch[1].trim();
+                        
+                        // Extrahiere den Hauptinhalt (alles nach dem letzten </think> Tag)
+                        const parts = rawText.split('</think>');
+                        const mainContent = parts[parts.length - 1].trim();
+                        
+                        // Erstelle eine KI-Nachricht und füge dann direkt die Thinking-Box hinzu
+                        const messageId = `ai-msg-${Date.now()}`;
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('message-container', 'ai-message-container');
+                        
+                        const aiMessage = document.createElement('div');
+                        aiMessage.classList.add('message', 'ai-message');
+                        aiMessage.id = messageId;
+                        
+                        const messageContent = document.createElement('div');
+                        messageContent.classList.add('message-content');
+                        
+                        aiMessage.appendChild(messageContent);
+                        messageElement.appendChild(aiMessage);
+                        chatBox.appendChild(messageElement);
+                        
+                        // Direkt den Thinking-Content hinzufügen ohne Loading-Nachricht
+                        updateStreamingMessage(messageId, rawText);
+                        
+                        // Nach dem Hinzufügen des Inhalts die Box standardmäßig einklappen
+                        setTimeout(() => {
+                            const thinkingContainer = messageElement.querySelector('.thinking-container');
+                            if (thinkingContainer) {
+                                const thinkingHeader = thinkingContainer.querySelector('.thinking-header');
+                                const thinkingContent = thinkingContainer.querySelector('.thinking-content');
+                                const toggleButton = thinkingHeader.querySelector('.thinking-toggle');
+                                
+                                // Box einklappen
+                                thinkingContent.style.display = 'none';
+                                toggleButton.textContent = '▶';
+                            }
+                        }, 50);
+                        
+                        continue; // Überspringen der normalen Nachrichtenverarbeitung
+                    }
+                }
+                
                 content = markdownConverter.makeHtml(rawText);
             }
             
-            // Add the AI message with HTML and raw text for copy actions
+            // Add the AI message with HTML and raw text for copy actions (für normale Nachrichten)
             addMessage('ai', { 
                 html: content, 
                 rawText: rawText 
@@ -2390,7 +2496,7 @@ function displayChatMessages(history) {
             } catch (error) {
                 console.error('Error when calling MathJax typeset:', error);
             }
-        }, 100); // Small delay to ensure DOM is fully updated
+        }, 100);
     }
     
     // Always scroll to bottom after displaying chat
@@ -2398,10 +2504,13 @@ function displayChatMessages(history) {
 }
 
 function updateChatHistoryList() {
+    // Clear current history list
     chatHistoryList.innerHTML = '';
+    
+    // Sort chats by timestamp
     const sortedChats = Object.values(allChats)
-                            .filter(chat => chat.history.length > 1) // Only show chats with more than the system prompt
-                            .sort((a, b) => b.timestamp - a.timestamp); // Show newest first
+                        .filter(chat => chat.history.length > 1) // Only show chats with more than the system prompt
+                        .sort((a, b) => b.timestamp - a.timestamp); // Show newest first
 
     if (sortedChats.length === 0) {
         // Optionally display a message indicating no chats yet
@@ -2422,11 +2531,11 @@ function updateChatHistoryList() {
         titleSpan.classList.add('history-item-title'); // Add class for potential styling
         li.appendChild(titleSpan);
 
-        // Container for actions (ellipsis and delete button)
+        // Container for action buttons
         const actionsContainer = document.createElement('div');
         actionsContainer.classList.add('history-item-actions');
-
-        // Ellipsis button (initially visible)
+        
+        // Ellipsis button that shows on hover
         const ellipsisBtn = document.createElement('button');
         ellipsisBtn.innerHTML = '&#8942;'; // Ellipsis character
         ellipsisBtn.classList.add('ellipsis-button');
@@ -2456,22 +2565,33 @@ function updateChatHistoryList() {
         actionsContainer.appendChild(ellipsisBtn);
         actionsContainer.appendChild(deleteBtn);
         li.appendChild(actionsContainer);
-
+        
         li.onclick = () => {
-            if (chat.id !== currentChatId) {
-                loadChat(chat.id);
+            loadChat(chat.id);
+            
+            // Auf mobilen Geräten die Sidebar einklappen
+            if (window.innerWidth <= 768) {
+                const sidebar = document.querySelector('.sidebar');
+                const toggleButton = document.getElementById('toggle-sidebar');
+                
+                if (sidebar) {
+                    sidebar.classList.remove('expanded');
+                }
+                
+                if (toggleButton) {
+                    // Icon zurücksetzen
+                    const icon = toggleButton.querySelector('svg');
+                    if (icon) {
+                        icon.innerHTML = `
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        `;
+                    }
+                }
             }
         };
-
-        // Add event listener to hide delete button if user clicks outside
-        document.addEventListener('click', (e) => {
-            // If the click is outside the actions container of this specific list item
-            if (!actionsContainer.contains(e.target) && deleteBtn.style.display !== 'none') {
-                 deleteBtn.style.display = 'none';
-                 ellipsisBtn.style.display = 'inline-block';
-            }
-        }, { capture: true }); // Use capture to handle clicks on li itself
-
+        
         chatHistoryList.appendChild(li);
     });
 }
@@ -4451,3 +4571,78 @@ async function performGoogleSearch(query) {
     // Gib nur eine Info zurück, dass keine weiteren Suchergebnisse verfügbar sind
     return "Keine weiteren spezifischen Suchergebnisse für diese Anfrage gefunden. Wenn Sie mehr Informationen benötigen, versuchen Sie bitte eine spezifischere Suchanfrage.";
 }
+
+// Dokument bereit Event-Handler
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing DOMContentLoaded code
+    
+    // Responsive Design: Sidebar Toggle für mobile Geräte
+    setupSidebarToggle();
+});
+
+// ... existing code ...
+
+// Sidebar Toggle für mobile Geräte einrichten
+function setupSidebarToggle() {
+    const toggleButton = document.getElementById('toggle-sidebar');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (!toggleButton || !sidebar) return;
+    
+    // Toggle-Funktion für die Sidebar
+    toggleButton.addEventListener('click', function() {
+        sidebar.classList.toggle('expanded');
+        
+        // Ändere das Icon je nach Zustand
+        const icon = this.querySelector('svg');
+        if (sidebar.classList.contains('expanded')) {
+            // Zu X-Symbol ändern wenn ausgeklappt
+            icon.innerHTML = `
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            `;
+        } else {
+            // Zurück zu Hamburger-Menü
+            icon.innerHTML = `
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            `;
+        }
+    });
+    
+    // Chat-History-Items sollten die Sidebar einklappen, wenn auf mobilen Geräten
+    const chatHistoryItems = document.querySelectorAll('.chat-history li');
+    chatHistoryItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // Nur auf mobilen Geräten die Sidebar einklappen
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('expanded');
+                // Icon zurücksetzen
+                const icon = toggleButton.querySelector('svg');
+                icon.innerHTML = `
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                `;
+            }
+        });
+    });
+    
+    // Bei Größenänderung prüfen und anpassen
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            // Auf Desktop die expanded-Klasse entfernen
+            sidebar.classList.remove('expanded');
+            // Icon zurücksetzen
+            const icon = toggleButton.querySelector('svg');
+            icon.innerHTML = `
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            `;
+        }
+    });
+}
+
+// ... existing code ...
