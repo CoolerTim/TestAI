@@ -344,7 +344,7 @@ const FREE_SEARCH_URL = "https://api.duckduckgo.com/?format=json&pretty=1&no_htm
 const MODEL_OPTIONS = {
     FAST: "openai",
     PRO: "openai-large",
-    REASONING: "qwen-reasoning"
+    REASONING: "openai-reasoning"
 };
 
 // Default model
